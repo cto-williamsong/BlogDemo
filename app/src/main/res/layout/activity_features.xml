@@ -14,33 +14,27 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/mFeaturesMainBtn"
+            android:id="@+id/mCameraFeaturesBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="新特性"
+            android:text="请求相机权限"
             android:textAllCaps="false"
             android:textSize="10sp"/>
 
         <Button
+            android:id="@+id/mPicFeaturesBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textAllCaps="false"
-            android:textSize="10sp"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textAllCaps="false"
-            android:textSize="10sp"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:text="获取拍照图片"
             android:textAllCaps="false"
             android:textSize="10sp"/>
     </LinearLayout>
+    <ImageView
+        android:id="@+id/mImgFeaturesIv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_gravity="center_horizontal"/>
 </LinearLayout>
