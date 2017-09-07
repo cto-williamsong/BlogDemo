@@ -1,11 +1,17 @@
 package com.loren.blogdemo;
 
+import android.app.AppOpsManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -15,9 +21,9 @@ import android.view.WindowManager;
  * Copyright (c) 2017 . All rights reserved.
  */
 
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity implements View.OnClickListener{
 	protected String TAG = "loren";
-	private String  APP_NAME;
+	private String APP_NAME;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -27,12 +33,15 @@ public abstract class BaseActivity extends AppCompatActivity {
 		initData();
 		initData();
 	}
+
 	//Activity跳转
 	public void startActivity(Class clazz, Intent intent, boolean isFinish) {
 		if (intent == null) {
-			intent = new Intent(this, clazz);
+			intent = new Intent();
 		}
-		intent.setClass(this, clazz);
+		if (clazz != null) {
+			intent.setClass(this, clazz);
+		}
 		startActivity(intent);
 		if (isFinish) {
 			finish();
@@ -48,14 +57,15 @@ public abstract class BaseActivity extends AppCompatActivity {
 					.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 			window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 			window.setStatusBarColor(Color.TRANSPARENT);
-			//window.setNavigationBarColor(Color.TRANSPARENT);
 		}
 	}
+
 	/**
-	 //	 * [页面跳转]
-	 //	 *
-	 //	 * @param clz
-	 //	 */
+	 * //	 * [页面跳转]
+	 * //	 *
+	 * //	 * @param clz
+	 * //
+	 */
 	//	public void startActivity(Class<?> clz) {
 	//		startActivity(clz, null);
 	//	}
@@ -74,16 +84,80 @@ public abstract class BaseActivity extends AppCompatActivity {
 	//		}
 	//		startActivity(intent);
 	//	}
-
-
-
 	public abstract void initLayoutView();
 
 	public abstract void initView();
 
 	public abstract void initData();
 
-	public abstract void initEvent();
+
+	//Android6.0权限========↓
+	//Android6.0检查权限,这个类只用来做权限检查
+	public boolean checkPermission(int requestID,String[] appOpsPermissions, String... permissions) {
+		//大于6.0就需要动态申请权限,小于6.0默认放过
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			boolean isAllGranted = checkPermissionAllGranted(permissions);//有一个权限不满足就为flase
+			boolean isAppOpsGranted = checkAppOpsPermissionsGranted(appOpsPermissions);
+			if (isAllGranted && isAppOpsGranted) {
+				return true;
+			} else {
+				return false;//当返回为flase时,就去申请权限,在false处理中请求下面的权限
+//				ActivityCompat.requestPermissions(this, permissions, requestID);
+			}
+		} else {
+			return true;
+		}
+	}
+	//检查是否拥有指定的所有权限
+	private boolean checkPermissionAllGranted(String... permissions) {
+		for (String permission : permissions) {
+			if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+				// 只要有一个权限没有被授予, 则直接返回 false
+				return false;
+			}
+		}
+		//所有权限申请成功
+		return true;
+	}
+	private boolean checkAppOpsPermissionsGranted(String... appOpsPermissions) {
+		AppOpsManager appOpsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+		int checkOp;
+		boolean isAppOpsGranted = true;
+		//权限通过
+		for (String appOpsPermission : appOpsPermissions) {
+			//检查权限但不抛出异常
+			checkOp = appOpsManager.checkOpNoThrow(appOpsPermission, Binder.getCallingUid(), getPackageName());
+			$Log(checkOp + "");
+
+			if (checkOp != AppOpsManager.MODE_ALLOWED) {
+				isAppOpsGranted = false;
+			}
+		}
+		return isAppOpsGranted;
+	}
+	//Android6.0权限========↑
+
+	@Override
+	public void onClick(View v) {
+//		if (fastClick())
+//			widgetClick(v);
+	}
+	//防止快速点击
+	private boolean fastClick() {
+		long lastClick = 0;
+		if (System.currentTimeMillis() - lastClick <= 1000) {
+			return false;
+		}
+		lastClick = System.currentTimeMillis();
+		return true;
+	}
+	//日志输出
+	protected void $Log(String msg) {
+		if (true) {
+			Log.d(TAG, msg);
+		}
+	}
+
 
 	//	/*
 	//链接：https://www.zhihu.com/question/47045239/answer/105086885
@@ -208,11 +282,11 @@ public abstract class BaseActivity extends AppCompatActivity {
 	//		$Log(TAG + "--->onResume()");
 	//	}
 	//
-	//	@Override
-	//	protected void onDestroy() {
-	//		super.onDestroy();
-	//		$Log(TAG + "--->onDestroy()");
-	//	}
+	//		@Override
+	//		protected void onDestroy() {
+	//			super.onDestroy();
+	//			$Log(TAG + "--->onDestroy()");
+	//		}
 	//
 	//	/**
 	//	 * [是否允许全屏]
@@ -241,31 +315,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 	//		this.isAllowScreenRoate = isAllowScreenRoate;
 	//	}
 	//
-	//	/**
-	//	 * [日志输出]
-	//	 *
-	//	 * @param msg
-	//	 */
-	//	protected void $Log(String msg) {
-	//		if (isDebug) {
-	//			Log.d(APP_NAME, msg);
-	//		}
-	//	}
-	//
-	//	/**
-	//	 * [防止快速点击]
-	//	 *
-	//	 * @return
-	//	 */
-	//	private boolean fastClick() {
-	//		long lastClick = 0;
-	//		if (System.currentTimeMillis() - lastClick <= 1000) {
-	//			return false;
-	//		}
-	//		lastClick = System.currentTimeMillis();
-	//		return true;
-	//	}
-	//}
 	//	 */
 
 }
